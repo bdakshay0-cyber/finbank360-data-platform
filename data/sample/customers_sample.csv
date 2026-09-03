@@ -1,0 +1,11 @@
+customer_id,first_name,last_name,date_of_birth,email,phone,city,state,country,customer_segment,risk_rating,created_date
+CUST001,James,Wilson,1988-04-12,james.wilson@example.com,0400000001,Melbourne,VIC,AU,RETAIL,LOW,2024-01-15
+CUST002,Emma,Johnson,1992-08-23,emma.johnson@example.com,0400000002,Sydney,NSW,AU,RETAIL,LOW,2024-02-10
+CUST003,Noah,Brown,1981-11-05,noah.brown@example.com,0400000003,Brisbane,QLD,AU,PREMIUM,MEDIUM,2024-02-21
+CUST004,Olivia,Davis,1995-01-17,olivia.davis@example.com,0400000004,Perth,WA,AU,RETAIL,LOW,2024-03-04
+CUST005,Liam,Miller,1979-06-30,liam.miller@example.com,0400000005,Adelaide,SA,AU,BUSINESS,MEDIUM,2024-03-19
+CUST006,Ava,Anderson,1986-09-14,ava.anderson@example.com,0400000006,Melbourne,VIC,AU,PREMIUM,LOW,2024-04-02
+CUST007,William,Thomas,1990-12-08,william.thomas@example.com,0400000007,Sydney,NSW,AU,RETAIL,HIGH,2024-04-18
+CUST008,Mia,Martin,1983-03-27,mia.martin@example.com,0400000008,Canberra,ACT,AU,BUSINESS,MEDIUM,2024-05-01
+CUST009,Lucas,White,1997-07-11,lucas.white@example.com,0400000009,Hobart,TAS,AU,RETAIL,LOW,2024-05-20
+CUST010,Sophia,Harris,1989-10-03,sophia.harris@example.com,0400000010,Darwin,NT,AU,PREMIUM,LOW,2024-06-06
