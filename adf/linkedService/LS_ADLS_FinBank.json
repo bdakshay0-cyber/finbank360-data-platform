@@ -1,0 +1,11 @@
+{
+	"name": "LS_ADLS_FinBank",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stfinbank360dev.dfs.core.windows.net/"
+		}
+	}
+}

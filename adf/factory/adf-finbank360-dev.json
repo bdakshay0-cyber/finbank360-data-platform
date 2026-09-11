@@ -1,0 +1,15 @@
+{
+	"name": "adf-finbank360-dev",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "australiaeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6c260656-734a-4812-89d1-1db2852983e1",
+		"tenantId": "57927a1c-4726-49e9-8781-e469e51ebbce"
+	}
+}
