@@ -1,0 +1,38 @@
+{
+	"name": "DS_CSV_Generic",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_FinBank",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_FolderPath": {
+				"type": "string"
+			},
+			"p_FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().p_FileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().p_FolderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "landing"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
