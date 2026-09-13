@@ -1,0 +1,26 @@
+{
+	"name": "DS_ADLS_CSV_Folder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_FinBank",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_FolderPath": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().p_FolderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "landing"
+			}
+		}
+	}
+}
