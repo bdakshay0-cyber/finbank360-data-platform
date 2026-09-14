@@ -1,0 +1,189 @@
+{
+	"name": "PL_Process_Transaction_File",
+	"properties": {
+		"activities": [
+			{
+				"name": "GM_ValidateTransactionFile",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_CSV_Generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_FolderPath": {
+								"value": "@pipeline().parameters.p_TargetPath",
+								"type": "Expression"
+							},
+							"p_FileName": {
+								"value": "@pipeline().parameters.p_FileName",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists",
+						"size"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "SW_TransactionFileAction",
+				"type": "Switch",
+				"dependsOn": [
+					{
+						"activity": "GM_ValidateTransactionFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@if(\n    and(\n        activity('GM_ValidateTransactionFile').output.exists,\n        greater(activity('GM_ValidateTransactionFile').output.size, 0)\n    ),\n    if(\n        greater(pipeline().parameters.p_ProcessedCount, 0),\n        'SKIP',\n        'PROCESS'\n    ),\n    'INVALID'\n)",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "PROCESS",
+							"activities": [
+								{
+									"name": "AUD_Transaction_Success",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_AzureSQL_FinBank",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": {
+													"value": "@concat(\n'INSERT INTO dbo.PipelineAudit\n(PipelineName, PipelineRunId, SourceSystem, SourceFile, PipelineStatus, StartTime, EndTime)\nVALUES\n(''PL_Process_Transaction_File'',\n''', pipeline().RunId, ''',\n''', pipeline().parameters.p_SourceName, ''',\n''', pipeline().parameters.p_FileName, ''',\n''SUCCESS'',\nSYSUTCDATETIME(),\nSYSUTCDATETIME());'\n)",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						},
+						{
+							"value": "SKIP",
+							"activities": [
+								{
+									"name": "WAIT_AlreadyProcessed",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							]
+						},
+						{
+							"value": "INVALID",
+							"activities": [
+								{
+									"name": "AUD_Transaction_Failure",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_AzureSQL_FinBank",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": {
+													"value": "@concat(\n'INSERT INTO dbo.PipelineAudit\n(PipelineName, PipelineRunId, SourceSystem, SourceFile, PipelineStatus, StartTime, EndTime, ErrorMessage)\nVALUES\n(''PL_Process_Transaction_File'',\n''', pipeline().RunId, ''',\n''', pipeline().parameters.p_SourceName, ''',\n''', pipeline().parameters.p_FileName, ''',\n''FAILED'',\nSYSUTCDATETIME(),\nSYSUTCDATETIME(),\n''Transaction file does not exist or is empty.'');'\n)",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "FAIL_TransactionFile",
+									"type": "Fail",
+									"dependsOn": [
+										{
+											"activity": "AUD_Transaction_Failure",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"message": {
+											"value": "@concat(\n    'Transaction file validation failed: ',\n    pipeline().parameters.p_FileName,\n    '. File does not exist or is empty.'\n)",
+											"type": "Expression"
+										},
+										"errorCode": {
+											"value": "FINBANK360_INVALID_TRANSACTION_FILE",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_FileName": {
+				"type": "string"
+			},
+			"p_TargetPath": {
+				"type": "string"
+			},
+			"p_SourceName": {
+				"type": "string"
+			},
+			"p_ProcessedCount": {
+				"type": "int",
+				"defaultValue": 0
+			}
+		},
+		"annotations": []
+	}
+}
