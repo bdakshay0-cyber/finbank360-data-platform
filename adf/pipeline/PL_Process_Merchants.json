@@ -1,0 +1,112 @@
+{
+	"name": "PL_Process_Merchants",
+	"properties": {
+		"activities": [
+			{
+				"name": "GM_ValidateMerchantFile",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_CSV_Generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_FolderPath": {
+								"value": "@pipeline().parameters.p_TargetPath",
+								"type": "Expression"
+							},
+							"p_FileName": {
+								"value": "@pipeline().parameters.p_SourceObject",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists",
+						"size"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "IF_ValidMerchantFile",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "GM_ValidateMerchantFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(\n    activity('GM_ValidateMerchantFile').output.exists,\n    greater(activity('GM_ValidateMerchantFile').output.size, 0)\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "AUD_Merchant_Success",
+							"type": "Script",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "LS_AzureSQL_FinBank",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": {
+											"value": "@concat(\n'INSERT INTO dbo.PipelineAudit\n(PipelineName, PipelineRunId, SourceSystem, SourceFile, PipelineStatus, StartTime, EndTime)\nVALUES\n(''PL_Process_Merchants'',\n''', pipeline().RunId, ''',\n''', pipeline().parameters.p_SourceName, ''',\n''', pipeline().parameters.p_SourceObject, ''',\n''SUCCESS'',\nSYSUTCDATETIME(),\nSYSUTCDATETIME());'\n)",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_TargetPath": {
+				"type": "string"
+			},
+			"p_SourceObject": {
+				"type": "string"
+			},
+			"p_LoadType": {
+				"type": "string"
+			},
+			"p_SourceName": {
+				"type": "string"
+			}
+		},
+		"annotations": []
+	}
+}
