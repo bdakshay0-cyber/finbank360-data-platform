@@ -599,8 +599,136 @@ GO
        05_validation_queries.sql
 
    ================================================================ */
+/* ================================================================
+   STEP 10 FINAL LANDING-LAYER ACCEPTANCE VALIDATION
+   ================================================================
+
+   Purpose:
+   Consolidated acceptance validation for the completed Step 10
+   metadata-driven ADF ingestion and ADLS landing layer.
+
+   Validates:
+   - Ingestion configuration
+   - Active source count
+   - Azure SQL source row counts
+   - Transaction-file audit status
+   - Transaction expected row count
+   - Merchant audit status
+   - Pipeline failures / negative-test evidence
+   - FX Rates activation status
+
+   Note:
+   ADLS physical-file presence is validated separately through
+   Azure Storage / ADF because Azure SQL cannot directly inspect
+   the ADLS landing folders in the current implementation.
+   ================================================================ */
+-- 1. Active ingestion sources
+SELECT
+    SourceName,
+    SourceType,
+    SourceObject,
+    TargetPath,
+    LoadType,
+    IsActive
+FROM dbo.IngestionConfig
+ORDER BY ConfigId;
 
 
+-- 2. Active source count
+SELECT
+    COUNT(*) AS ActiveSourceCount
+FROM dbo.IngestionConfig
+WHERE IsActive = 1;
+
+
+-- 3. SQL source counts
+SELECT 'Customers' AS SourceName, COUNT(*) AS SourceRowCount
+FROM src.Customers
+
+UNION ALL
+
+SELECT 'Accounts', COUNT(*)
+FROM src.Accounts
+
+UNION ALL
+
+SELECT 'Loans', COUNT(*)
+FROM src.Loans
+
+UNION ALL
+
+SELECT 'Branches', COUNT(*)
+FROM src.Branches;
+
+
+-- 4. Successful September transaction files
+SELECT
+    COUNT(DISTINCT SourceFile) AS SuccessfulTransactionFiles
+FROM dbo.PipelineAudit
+WHERE SourceFile LIKE 'transactions_202609%.csv'
+  AND PipelineStatus = 'SUCCESS';
+
+
+-- 5. Transaction audit detail
+SELECT
+    SourceFile,
+    PipelineStatus,
+    COUNT(*) AS AuditCount
+FROM dbo.PipelineAudit
+WHERE SourceFile LIKE 'transactions_202609%.csv'
+GROUP BY
+    SourceFile,
+    PipelineStatus
+ORDER BY
+    SourceFile,
+    PipelineStatus;
+
+
+-- 6. Merchant success count
+SELECT
+    COUNT(*) AS MerchantSuccessCount
+FROM dbo.PipelineAudit
+WHERE SourceFile = 'merchants.csv'
+  AND PipelineStatus = 'SUCCESS';
+
+
+-- 7. Latest Merchant runs
+SELECT TOP 5
+    AuditId,
+    PipelineName,
+    PipelineRunId,
+    SourceSystem,
+    SourceFile,
+    PipelineStatus,
+    CreatedDate
+FROM dbo.PipelineAudit
+WHERE SourceFile = 'merchants.csv'
+ORDER BY AuditId DESC;
+
+
+-- 8. Failure history
+SELECT
+    AuditId,
+    PipelineName,
+    SourceSystem,
+    SourceFile,
+    PipelineStatus,
+    ErrorMessage,
+    CreatedDate
+FROM dbo.PipelineAudit
+WHERE PipelineStatus = 'FAILED'
+ORDER BY AuditId DESC;
+
+
+-- 9. FX REST implementation state
+SELECT
+    SourceName,
+    SourceType,
+    SourceObject,
+    TargetPath,
+    IsActive
+FROM dbo.IngestionConfig
+WHERE SourceName = 'FXRates';
 
 /* ================================================================
    11. FUTURE SOURCE-TO-TARGET RECONCILIATION
