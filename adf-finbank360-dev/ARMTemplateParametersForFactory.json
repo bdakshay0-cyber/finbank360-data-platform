@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-finbank360-dev"
+		},
+		"LS_ADLS_FinBank_properties_typeProperties_url": {
+			"value": "https://stfinbank360dev.dfs.core.windows.net/"
+		},
+		"LS_AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://kv-finbank360-dev.vault.azure.net/"
+		},
+		"LS_AzureSQL_FinBank_properties_typeProperties_server": {
+			"value": "sql-finbank360-dev.database.windows.net"
+		},
+		"LS_AzureSQL_FinBank_properties_typeProperties_database": {
+			"value": "sqldb-finbank360"
+		},
+		"LS_AzureSQL_FinBank_properties_typeProperties_userName": {
+			"value": "sqladmin"
+		},
+		"LS_REST_FX_properties_typeProperties_url": {
+			"value": "https://api.frankfurter.dev/"
+		}
+	}
+}
