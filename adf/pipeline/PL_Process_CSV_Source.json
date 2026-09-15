@@ -1,0 +1,106 @@
+{
+	"name": "PL_Process_CSV_Source",
+	"properties": {
+		"activities": [
+			{
+				"name": "SW_SourceName",
+				"type": "Switch",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@pipeline().parameters.p_SourceName",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "Transactions",
+							"activities": [
+								{
+									"name": "EP_Process_Transactions",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_Process_Transactions",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_TargetPath": {
+												"value": "@pipeline().parameters.p_TargetPath",
+												"type": "Expression"
+											},
+											"p_SourceName": {
+												"value": "@pipeline().parameters.p_SourceName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "Merchants",
+							"activities": [
+								{
+									"name": "EP_Process_Merchants",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_Process_Merchants",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_TargetPath": {
+												"value": "@pipeline().parameters.p_TargetPath",
+												"type": "Expression"
+											},
+											"p_SourceObject": {
+												"value": "@pipeline().parameters.p_SourceObject",
+												"type": "Expression"
+											},
+											"p_LoadType": {
+												"value": "@pipeline().parameters.p_LoadType",
+												"type": "Expression"
+											},
+											"p_SourceName": {
+												"value": "@pipeline().parameters.p_SourceName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_TargetPath": {
+				"type": "string"
+			},
+			"p_SourceObject": {
+				"type": "string"
+			},
+			"p_LoadType": {
+				"type": "string"
+			},
+			"p_SourceName": {
+				"type": "string"
+			}
+		},
+		"annotations": []
+	}
+}
