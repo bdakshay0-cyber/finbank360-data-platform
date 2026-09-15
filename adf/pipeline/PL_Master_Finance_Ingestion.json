@@ -1,0 +1,201 @@
+{
+	"name": "PL_Master_Finance_Ingestion",
+	"properties": {
+		"activities": [
+			{
+				"name": "LK_IngestionConfig",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT\n    ConfigId,\n    SourceName,\n    SourceType,\n    SourceObject,\n    TargetPath,\n    LoadType,\n    WatermarkColumn,\n    LastWatermark,\n    IsActive\nFROM dbo.IngestionConfig\nWHERE IsActive = 1\nORDER BY ConfigId;",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQL_IngestionConfig",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "FE_IngestionSources",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LK_IngestionConfig",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LK_IngestionConfig').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "SW_SourceType",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@item().SourceType",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "SQL",
+										"activities": [
+											{
+												"name": "Copy data",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "ParquetSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														},
+														"formatSettings": {
+															"type": "ParquetWriteSettings"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "DS_SQL_Generic",
+														"type": "DatasetReference",
+														"parameters": {
+															"p_SchemaName": {
+																"value": "@split(item().SourceObject,'.')[0]",
+																"type": "Expression"
+															},
+															"p_TableName": {
+																"value": "@split(item().SourceObject,'.')[1]",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "DS_ADLS_SQL_Landing",
+														"type": "DatasetReference",
+														"parameters": {
+															"p_TargetPath": {
+																"value": "@item().TargetPath",
+																"type": "Expression"
+															},
+															"p_FileName": {
+																"value": "@concat(\n    toLower(item().SourceName),\n    '_',\n    formatDateTime(utcNow(),'yyyyMMdd_HHmmss'),\n    '.parquet'\n)",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "CSV",
+										"activities": [
+											{
+												"name": "EP_Process_CSV_Source",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Process_CSV_Source",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"p_TargetPath": {
+															"value": "@item().TargetPath",
+															"type": "Expression"
+														},
+														"p_SourceObject": {
+															"value": "@item().SourceObject",
+															"type": "Expression"
+														},
+														"p_LoadType": {
+															"value": "@item().LoadType",
+															"type": "Expression"
+														},
+														"p_SourceName": {
+															"value": "@item().SourceName",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									},
+									{
+										"value": "REST",
+										"activities": [
+											{
+												"name": "WAIT_REST_NotImplemented",
+												"type": "Wait",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"waitTimeInSeconds": 1
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": []
+	}
+}
