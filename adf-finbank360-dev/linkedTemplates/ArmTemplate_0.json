@@ -78,57 +78,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/LS_AzureDatabricks')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureDatabricks",
-				"typeProperties": {
-					"domain": "https://adb-7405617949583939.19.azuredatabricks.net",
-					"accessToken": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_AzureKeyVault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "databricks-access-token"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_AzureSQL_FinBank')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"server": "[parameters('LS_AzureSQL_FinBank_properties_typeProperties_server')]",
-					"database": "[parameters('LS_AzureSQL_FinBank_properties_typeProperties_database')]",
-					"encrypt": "mandatory",
-					"trustServerCertificate": false,
-					"authenticationType": "SQL",
-					"userName": "[parameters('LS_AzureSQL_FinBank_properties_typeProperties_userName')]",
-					"password": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_AzureKeyVault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "sql-admin-password"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_CSV_Folder')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -243,58 +192,231 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQL_IngestionConfig')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/LS_AzureDatabricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_AzureSQL_FinBank",
-					"type": "LinkedServiceReference"
-				},
 				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
+				"type": "AzureDatabricks",
 				"typeProperties": {
-					"schema": "dbo",
-					"table": "IngestionConfig"
+					"domain": "https://adb-7405617949583939.19.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_AzureKeyVault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "databricks-access-token"
+					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQL_FinBank')]"
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQL_Generic')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/LS_AzureSQL_FinBank')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_AzureSQL_FinBank",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"p_SchemaName": {
-						"type": "string"
-					},
-					"p_TableName": {
-						"type": "string"
-					}
-				},
 				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
+				"type": "AzureSqlDatabase",
 				"typeProperties": {
-					"schema": {
-						"value": "@dataset().p_SchemaName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().p_TableName",
-						"type": "Expression"
+					"server": "[parameters('LS_AzureSQL_FinBank_properties_typeProperties_server')]",
+					"database": "[parameters('LS_AzureSQL_FinBank_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_AzureSQL_FinBank_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_AzureKeyVault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "sql-admin-password"
 					}
 				}
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_REST_FX_Rates')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_REST_FX",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "v2/rates?base=AUD&quotes=USD,EUR,GBP,NZD,JPY,INR",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_REST_FX')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_FX_JSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_FinBank",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_FileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().p_FileName",
+							"type": "Expression"
+						},
+						"folderPath": "fx_rates",
+						"fileSystem": "landing"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_FinBank')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Process_Merchants')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GM_ValidateMerchantFile",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_CSV_Generic",
+								"type": "DatasetReference",
+								"parameters": {
+									"p_FolderPath": {
+										"value": "@pipeline().parameters.p_TargetPath",
+										"type": "Expression"
+									},
+									"p_FileName": {
+										"value": "@pipeline().parameters.p_SourceObject",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists",
+								"size"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "IF_ValidMerchantFile",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "GM_ValidateMerchantFile",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@and(\n    activity('GM_ValidateMerchantFile').output.exists,\n    greater(activity('GM_ValidateMerchantFile').output.size, 0)\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "AUD_Merchant_Success",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_AzureSQL_FinBank",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": {
+													"value": "@concat(\n'INSERT INTO dbo.PipelineAudit\n(PipelineName, PipelineRunId, SourceSystem, SourceFile, PipelineStatus, StartTime, EndTime)\nVALUES\n(''PL_Process_Merchants'',\n''', pipeline().RunId, ''',\n''', pipeline().parameters.p_SourceName, ''',\n''', pipeline().parameters.p_SourceObject, ''',\n''SUCCESS'',\nSYSUTCDATETIME(),\nSYSUTCDATETIME());'\n)",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_TargetPath": {
+						"type": "string"
+					},
+					"p_SourceObject": {
+						"type": "string"
+					},
+					"p_LoadType": {
+						"type": "string"
+					},
+					"p_SourceName": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_CSV_Generic')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQL_FinBank')]"
 			]
 		},
@@ -337,6 +459,7 @@
 							],
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
 								"enablePartitionDiscovery": false
 							},
 							"formatSettings": {
@@ -497,14 +620,70 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_Process_Merchants')]",
+			"name": "[concat(parameters('factoryName'), '/DS_SQL_Generic')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQL_FinBank",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_SchemaName": {
+						"type": "string"
+					},
+					"p_TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().p_SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().p_TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQL_FinBank')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQL_IngestionConfig')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQL_FinBank",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "IngestionConfig"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQL_FinBank')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Process_FX_Rates')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "GM_ValidateMerchantFile",
-						"type": "GetMetadata",
+						"name": "CP_REST_FX_To_Landing",
+						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -515,106 +694,56 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_CSV_Generic",
-								"type": "DatasetReference",
-								"parameters": {
-									"p_FolderPath": {
-										"value": "@pipeline().parameters.p_TargetPath",
-										"type": "Expression"
-									},
-									"p_FileName": {
-										"value": "@pipeline().parameters.p_SourceObject",
-										"type": "Expression"
-									}
+							"source": {
+								"type": "RestSource",
+								"httpRequestTimeout": "00:01:40",
+								"requestInterval": "00.00:00:00.010",
+								"requestMethod": "GET",
+								"paginationRules": {
+									"supportRFC5988": "true"
 								}
 							},
-							"fieldList": [
-								"exists",
-								"size"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"enablePartitionDiscovery": false
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings",
+									"filePattern": "arrayOfObjects"
+								}
 							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "IF_ValidMerchantFile",
-						"type": "IfCondition",
-						"dependsOn": [
+							"enableStaging": false
+						},
+						"inputs": [
 							{
-								"activity": "GM_ValidateMerchantFile",
-								"dependencyConditions": [
-									"Succeeded"
-								]
+								"referenceName": "DS_REST_FX_Rates",
+								"type": "DatasetReference",
+								"parameters": {}
 							}
 						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@and(\n    activity('GM_ValidateMerchantFile').output.exists,\n    greater(activity('GM_ValidateMerchantFile').output.size, 0)\n)",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "AUD_Merchant_Success",
-									"type": "Script",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "LS_AzureSQL_FinBank",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "NonQuery",
-												"text": {
-													"value": "@concat(\n'INSERT INTO dbo.PipelineAudit\n(PipelineName, PipelineRunId, SourceSystem, SourceFile, PipelineStatus, StartTime, EndTime)\nVALUES\n(''PL_Process_Merchants'',\n''', pipeline().RunId, ''',\n''', pipeline().parameters.p_SourceName, ''',\n''', pipeline().parameters.p_SourceObject, ''',\n''SUCCESS'',\nSYSUTCDATETIME(),\nSYSUTCDATETIME());'\n)",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_FX_JSON",
+								"type": "DatasetReference",
+								"parameters": {
+									"p_FileName": {
+										"value": "@concat(\n    'fx_rates_',\n    formatDateTime(utcNow(),'yyyyMMdd_HHmmss'),\n    '.json'\n)",
+										"type": "Expression"
 									}
 								}
-							]
-						}
+							}
+						]
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"parameters": {
-					"p_TargetPath": {
-						"type": "string"
-					},
-					"p_SourceObject": {
-						"type": "string"
-					},
-					"p_LoadType": {
-						"type": "string"
-					},
-					"p_SourceName": {
-						"type": "string"
-					}
-				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_CSV_Generic')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQL_FinBank')]"
+				"[concat(variables('factoryId'), '/datasets/DS_REST_FX_Rates')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_FX_JSON')]"
 			]
 		},
 		{
@@ -651,6 +780,7 @@
 							],
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
 								"enablePartitionDiscovery": false
 							},
 							"formatSettings": {
@@ -1098,6 +1228,33 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "DBX_Run_Bronze_Job",
+						"type": "DatabricksJob",
+						"dependsOn": [
+							{
+								"activity": "FE_IngestionSources",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"jobId": "310810490554715"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"policy": {
@@ -1107,6 +1264,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQL_IngestionConfig')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureDatabricks')]",
 				"[concat(variables('factoryId'), '/datasets/DS_SQL_Generic')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_SQL_Landing')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_Process_CSV_Source')]"
