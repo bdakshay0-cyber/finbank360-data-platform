@@ -1,0 +1,28 @@
+{
+	"name": "DS_ADLS_FX_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_FinBank",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().p_FileName",
+					"type": "Expression"
+				},
+				"folderPath": "fx_rates",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {}
+	}
+}
